@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../modules/auth/splash_screen.dart';
 import '../../modules/auth/login_screen.dart';
 import '../../modules/auth/signup_screen.dart';
-import '../../modules/user/home_screen.dart';
+import '../../modules/user/user_dashboard.dart';
 import '../../modules/vendor/vendor_dashboard.dart';
 import '../../modules/delivery/delivery_dashboard.dart';
 import '../../modules/admin/admin_dashboard.dart';
@@ -21,7 +21,7 @@ class AppRoutes {
     splash: (context) => const SplashScreen(),
     login: (context) => const LoginScreen(),
     signup: (context) => const SignupScreen(),
-    home: (context) => const HomeScreen(),
+    home: (context) => const UserDashboard(),
     vendor: (context) => const VendorDashboard(),
     delivery: (context) => const DeliveryDashboard(),
     admin: (context) => const AdminDashboard(),

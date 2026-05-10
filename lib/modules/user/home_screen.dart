@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../common/widgets/glassmorphism_container.dart';
 import 'restaurant/restaurant_details_screen.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/ai_provider.dart';
+import '../../core/providers/search_provider.dart';
+import '../../widgets/ai_recommendation_card.dart';
+import '../../widgets/search_result_card.dart';
+import '../ai/chatbot_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
   int _bannerIndex = 0;
+  final TextEditingController _searchController = TextEditingController();
 
   final _banners = const [
     {'text': '50% OFF on first order 🎉', 'sub': 'Use code UNIBITE50'},
@@ -123,11 +130,11 @@ class _HomeScreenState extends State<HomeScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Welcome to UniBite 👋',
+                                    'Good Evening Khushi 👋',
                                     style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.primaryPink,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -148,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen>
                           const SizedBox(height: 20),
 
                           // ── Search Bar ──
-                          _SearchBar(),
+                          _SearchBar(controller: _searchController),
 
                           const SizedBox(height: 20),
 
@@ -234,6 +241,60 @@ class _HomeScreenState extends State<HomeScreen>
                           );
                         },
                       ),
+                    ),
+                  ),
+
+                  // ── AI Picks Section ──
+                  SliverToBoxAdapter(
+                    child: Consumer<AIProvider>(
+                      builder: (context, aiProvider, child) {
+                        if (aiProvider.recommendations.isEmpty && !aiProvider.isLoading) {
+                          return const SizedBox.shrink();
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.auto_awesome, color: AppColors.primaryPink, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'AI Picks For You ✨',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              height: 220,
+                              child: aiProvider.isLoading
+                                ? const Center(child: CircularProgressIndicator())
+                                : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    itemCount: aiProvider.recommendations.length,
+                                    itemBuilder: (context, index) {
+                                      final rec = aiProvider.recommendations[index];
+                                      return AIRecommendationCard(
+                                        recommendation: rec,
+                                        onAdd: () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Added ${rec.foodName} to cart!')),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
 
@@ -326,6 +387,98 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
+      bottomSheet: Consumer<SearchProvider>(
+        builder: (context, searchProvider, child) {
+          if (searchProvider.query.isEmpty) return const SizedBox.shrink();
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Search Results',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () {
+                          searchProvider.clearSearch();
+                          _searchController.clear();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: searchProvider.isSearching
+                      ? const Center(child: CircularProgressIndicator())
+                      : searchProvider.results.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No results for "${searchProvider.query}"',
+                                    style: TextStyle(color: Colors.grey.shade500),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              itemCount: searchProvider.results.length,
+                              itemBuilder: (context, index) {
+                                final result = searchProvider.results[index];
+                                return SearchResultCard(
+                                  result: result,
+                                  onAdd: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Added ${result.item.name} from ${result.canteen.name} to cart!')),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+          );
+        },
+        backgroundColor: AppColors.primaryPink,
+        icon: const Icon(Icons.auto_awesome, color: Colors.white),
+        label: const Text('Ask AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 }
@@ -372,10 +525,18 @@ class _NotifBell extends StatelessWidget {
   }
 }
 
+
+
+
 // ── Search Bar ─────────────────────────────────────────────────────────────────
 class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  const _SearchBar({required this.controller});
+
   @override
   Widget build(BuildContext context) {
+    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+    
     return Container(
       height: 52,
       decoration: BoxDecoration(
@@ -397,6 +558,8 @@ class _SearchBar extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
+              controller: controller,
+              onChanged: (val) => searchProvider.onSearchChanged(val),
               decoration: InputDecoration(
                 hintText: 'Search canteens or dishes...',
                 hintStyle: TextStyle(
@@ -406,6 +569,14 @@ class _SearchBar extends StatelessWidget {
               ),
             ),
           ),
+          if (controller.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18),
+              onPressed: () {
+                controller.clear();
+                searchProvider.clearSearch();
+              },
+            ),
           Container(
             margin: const EdgeInsets.all(6),
             padding: const EdgeInsets.all(8),

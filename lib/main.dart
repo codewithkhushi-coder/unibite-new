@@ -2,9 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_colors.dart';
+import 'package:provider/provider.dart';
+import 'core/providers/ai_provider.dart';
+import 'core/providers/search_provider.dart';
 
-void main() {
-  runApp(const UniBiteApp());
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/providers/profile_provider.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: 'https://xoitwwiftlwuxankzlua.supabase.co',
+    anonKey: 'sb_publishable_ZRg3_RDKKE3sOmN2sWS6xA_UfIf9WkW',
+  );
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AIProvider()),
+        ChangeNotifierProvider(create: (_) => SearchProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+      ],
+      child: const UniBiteApp(),
+    ),
+  );
 }
 
 class UniBiteApp extends StatelessWidget {

@@ -4,6 +4,7 @@ import 'home_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'cart/cart_screen.dart';
+import '../ai/chatbot_screen.dart';
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});
@@ -18,6 +19,7 @@ class _UserDashboardState extends State<UserDashboard>
 
   final List<Widget> _pages = const [
     HomeScreen(),
+    ChatbotScreen(),
     OrdersScreen(),
     CartScreen(),
     ProfileScreen(),
@@ -25,6 +27,7 @@ class _UserDashboardState extends State<UserDashboard>
 
   final _navItems = const [
     {'icon': Icons.home_rounded, 'label': 'Home'},
+    {'icon': Icons.auto_awesome, 'label': 'AI'},
     {'icon': Icons.receipt_long_rounded, 'label': 'Orders'},
     {'icon': Icons.shopping_bag_rounded, 'label': 'Cart'},
     {'icon': Icons.person_rounded, 'label': 'Profile'},
